@@ -1,4 +1,6 @@
 ﻿using Newtonsoft.Json;
+using System.Linq;
+using System.Threading.Tasks;
 using TaskUnMEP.Models;
 
 List<UserTask> userTasks = new();
@@ -18,8 +20,6 @@ catch (Exception e)
     Console.WriteLine("Aquivo não encontrado: " + e.Message);
 }
 
-
-Dictionary<string, object> dataReturn = new Dictionary<string, object>();
 
 var usersValid = userTasks.Where(u => u.minutes >= 0).ToList();
 var totalMinutes = usersValid.Select(u => u.minutes).Sum();
@@ -55,10 +55,12 @@ var employeeReturn = new List<UserData>();
 
 foreach(var emp in employee)
 {
+    var quantTask = emp.Select(e => e.taskId).Distinct().Count();
+    List<int> distTask = emp.OrderBy(e => e.taskId).Select(e => e.taskId).Distinct().ToList();  
     var id = emp.Select(u => u.userId).First();
     var name = emp.Select(u => u.userName).First();
     int totalEmpMinutes = emp.Select(u => u.minutes).Sum();
-    employeeReturn.Add(new UserData(id, name, totalEmpMinutes));
+    employeeReturn.Add(new UserData(id, name, totalEmpMinutes, distTask, quantTask));
 }
 
 var top3Employees = employeeReturn
@@ -66,7 +68,6 @@ var top3Employees = employeeReturn
     .Take(3)
     .ToList();
 
-Console.ReadKey();
-
+var mostDistinctUserOnTasks = employeeReturn.OrderBy(e => e.userId).OrderByDescending(e => e.GetTaskQuant()).First();
 
 
