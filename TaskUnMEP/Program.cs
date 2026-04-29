@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Globalization;
 using TaskUnMEP.Models;
+
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 List<UserTask> userTasks = new();
 string path = "../../../data.json";
@@ -23,7 +25,7 @@ catch (Exception e)
 
 var usersValid = userTasks.Where(u => u.minutes >= 0).ToList();
 var totalMinutes = usersValid.Select(u => u.minutes).Sum();
-var taskByGroup  = usersValid.GroupBy(u => u.taskId).ToList();
+var taskByGroup = usersValid.GroupBy(u => u.taskId).ToList();
 
 var taskToReturn = new List<TaskData>();
 
@@ -43,24 +45,29 @@ foreach (var group in taskByGroup)
     taskToReturn.Add(task);
 }
 
-var moreWork = taskByGroup.MaxBy(t => t.Select(u => u.minutes).Sum());
+var moreWork = taskToReturn.MaxBy(t => t.totalMinutes);
+
 
 var top3TasksPercentage = taskToReturn
     .OrderByDescending(t => t.totalMinutes)
+    .Select(t => new
+    {
+        taskId = t.taskId,
+        taskName = t.taskName,
+        percentage = t.percentage
+    })
     .Take(3)
     .ToList();
-
 var employee = usersValid.GroupBy(u => u.userId).ToList();
 var employeeReturn = new List<UserData>();
 
-foreach(var emp in employee)
+foreach (var emp in employee)
 {
-    var quantTask = emp.Select(e => e.taskId).Distinct().Count();
-    List<int> distTask = emp.OrderBy(e => e.taskId).Select(e => e.taskId).Distinct().ToList();  
+    List<int> distTask = emp.OrderBy(e => e.taskId).Select(e => e.taskId).Distinct().ToList();
     var id = emp.Select(u => u.userId).First();
     var name = emp.Select(u => u.userName).First();
     int totalEmpMinutes = emp.Select(u => u.minutes).Sum();
-    employeeReturn.Add(new UserData(id, name, totalEmpMinutes, distTask, quantTask));
+    employeeReturn.Add(new UserData(id, name, totalEmpMinutes, distTask));
 }
 
 var top3Employees = employeeReturn
@@ -68,6 +75,24 @@ var top3Employees = employeeReturn
     .Take(3)
     .ToList();
 
-var mostDistinctUserOnTasks = employeeReturn.OrderBy(e => e.userId).OrderByDescending(e => e.GetTaskQuant()).First();
+var mostDistinctUserOnTasks = employeeReturn.OrderBy(e => e.userId).OrderByDescending(e => e.GetTaskDist().Count()).First();
 
 
+Dictionary<string, object> dataReturn = new Dictionary<string, object>();
+
+dataReturn["totalMinutes"] = totalMinutes;
+dataReturn["tasks"] = taskToReturn.OrderByDescending(t => t.totalMinutes);
+dataReturn["mostWorkedTask"] = moreWork;
+dataReturn["top3TasksPercentage"] = top3TasksPercentage;
+dataReturn["top3Employees"] = top3Employees;
+dataReturn["mostDistinctUserOnTasks"] = new
+{
+    userId = mostDistinctUserOnTasks.userId,
+    userName = mostDistinctUserOnTasks.userName,
+    distinctTasks = mostDistinctUserOnTasks.GetTaskDist().Count(),
+    taskIds = mostDistinctUserOnTasks.GetTaskDist()
+};
+dataReturn["ignoredRecords"] = userTasks.Count() - usersValid.Count();
+
+string jsonReturn = JsonConvert.SerializeObject(dataReturn, Formatting.Indented);
+File.WriteAllText("tasks.json", jsonReturn);
