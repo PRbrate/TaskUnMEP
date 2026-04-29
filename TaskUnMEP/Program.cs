@@ -19,5 +19,14 @@ catch (Exception e)
 }
 
 
+Dictionary<string, object> dataReturn = new Dictionary<string, object>();
+
+var usersValid = userTasks.Where(u => u.minutes >= 0).ToList();
+var totalMinutes = usersValid.Select(u => u.minutes).Sum();
+var taskByGroup  = usersValid.GroupBy(u => u.taskId).ToList();
+
+
+
+
 
 
