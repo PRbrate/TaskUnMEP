@@ -270,6 +270,6 @@ File.WriteAllText("/output/result.json", jsonReturn);
 
 ### Explicação
 
-Cria o arquivo `result.json`.
+Cria o arquivo `result.json`. na pasta output
 
 ---
