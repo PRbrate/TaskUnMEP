@@ -6,7 +6,7 @@ CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
 List<UserTask> userTasks = new();
-string path = "../../../data.json";
+string path = "/app/data.json";
 
 try
 {
@@ -21,7 +21,6 @@ catch (Exception e)
 {
     Console.WriteLine("Aquivo não encontrado: " + e.Message);
 }
-
 
 var usersValid = userTasks.Where(u => u.minutes >= 0).ToList();
 var totalMinutes = usersValid.Select(u => u.minutes).Sum();
@@ -58,6 +57,7 @@ var top3TasksPercentage = taskToReturn
     })
     .Take(3)
     .ToList();
+
 var employee = usersValid.GroupBy(u => u.userId).ToList();
 var employeeReturn = new List<UserData>();
 
@@ -95,4 +95,4 @@ dataReturn["mostDistinctUserOnTasks"] = new
 dataReturn["ignoredRecords"] = userTasks.Count() - usersValid.Count();
 
 string jsonReturn = JsonConvert.SerializeObject(dataReturn, Formatting.Indented);
-File.WriteAllText("tasks.json", jsonReturn);
+File.WriteAllText("/output/result.json", jsonReturn);

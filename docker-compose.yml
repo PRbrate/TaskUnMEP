@@ -1,0 +1,17 @@
+version: "3.9"
+
+services:
+  api:
+    image: taskunmep
+    container_name: taskunmep_container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+        - ./data.json:/app/data.json
+        - ./output:/output
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge
